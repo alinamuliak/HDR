@@ -12,7 +12,7 @@ if __name__ == '__main__':
     cam.set(cv2.CAP_PROP_EXPOSURE, exposures[current_exposure_index])
     cv2.namedWindow("camera")
 
-    img_counter = 0
+    # img_counter = 0
     while True:
         ret, frame = cam.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -35,6 +35,16 @@ if __name__ == '__main__':
                     break
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 cv2.imshow("camera", gray)
+                if current_exposure_index == 0:
+                    if np.count_nonzero(gray >= 255) < len(gray) * 0.2:
+                        img_name = f'underexposed{exposures[0]}.png'
+                        cv2.imwrite(img_name, gray)
+                        print(
+                            f"THE SCENE IS TOO DARK, saved frame to {img_name} with exposure value {exposures[0]}")
+                        cam.release()
+                        cv2.destroyAllWindows()
+                        exit()
+                    cam.set(cv2.CAP_PROP_EXPOSURE, exposures[current_exposure_index])
                 if np.amax(gray) >= 255:
 
                     if current_exposure_index == len(exposures) - 1:
@@ -48,44 +58,27 @@ if __name__ == '__main__':
                         current_exposure_index += 1
                         cam.set(cv2.CAP_PROP_EXPOSURE, exposures[current_exposure_index])
 
-                elif np.amax(gray) < 1 and current_exposure_index == 0:
-                    img_name = f'underexposed.png'
-                    cv2.imwrite(img_name, gray)
-                    print(f"THE SCENE IS TOO DARK, saved frame to {img_name} with exposure value {exposures[current_exposure_index]}")
-                    cam.release()
-                    cv2.destroyAllWindows()
-                    exit()
-
                 else:
-                    cam.set(cv2.CAP_PROP_EXPOSURE, exposures[0])
-                    ret, frame = cam.read()
-                    if not ret:
-                        print("failed to grab frame")
-                        break
-                    gray_smallest_shutter_speed = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    if np.count_nonzero(gray_smallest_shutter_speed >= 255) < len(gray_smallest_shutter_speed) * 0.2:
-                        img_name = f'underexposed.png'
-                        cv2.imwrite(img_name, gray)
-                        print(
-                            f"THE SCENE IS TOO DARK, saved frame to {img_name} with exposure value {exposures[0]}")
-                        cam.release()
-                        cv2.destroyAllWindows()
-                        exit()
-                    cam.set(cv2.CAP_PROP_EXPOSURE, exposures[current_exposure_index])
                     suitable_exposure_index = current_exposure_index
-                    img_name = f'gray_{img_counter}.png'
-                    img_counter += 1
+                    img_name = f'gray{exposures[current_exposure_index]}.png'
                     cv2.imwrite(img_name, gray)
                     print(f"{img_name} written!")
                     print(f"FOUNDED STARTING EXPOSURE {exposures[suitable_exposure_index]}")
                     break
                 cv2.imshow("camera", gray)
 
-            while np.count_nonzero(gray == 255) < len(gray) * 0.2 and suitable_exposure_index >= 0:
+            while np.count_nonzero(gray == 255) < len(gray) * 0.2 and suitable_exposure_index > 0:
+                ret, frame = cam.read()
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                if not ret:
+                    print("failed to grab frame")
+                    break
+                cv2.imshow("camera", gray)
+
                 suitable_exposure_index -= 1
                 cam.set(cv2.CAP_PROP_EXPOSURE, exposures[current_exposure_index])
-                img_name = f'gray_{img_counter}.png'
-                img_counter += 1
+                sleep(2)
+                img_name = f'gray{exposures[suitable_exposure_index]}.png'
                 cv2.imwrite(img_name, gray)
                 print(f"{img_name} written with {exposures[suitable_exposure_index]} exposure!")
 
