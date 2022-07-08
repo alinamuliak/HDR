@@ -36,14 +36,18 @@ def merge_hdr(images, output_filename="merged_hdr.png"):
 
 
 if __name__ == "__main__":
-    files = ['opencv_frame_0.png', 'opencv_frame_1.png', 'opencv_frame_2.png']
-    rgb = ['r', 'g', 'b']
+    exposures = [-i for i in range(7, 10)]
+    files = [f'gray-{i}.png' for i in range(7, 10)]
     read_images = list([cv.imread(f) for f in files])
-
     # exposure times in seconds
-    exposures = np.float32([0.00015, 0.02, 0.64])  # corresponding [-13, -6, -1] exposure times
+    exposure_value_in_sec = {-1: 0.64, -2: 0.32, -3: 0.16, -4: 0.08,
+                             -5: 0.04, -6: 0.02, -7: 0.01, -8: 0.005,
+                             -9: 0.0025, -10: 0.00125, -11: 0.00065,
+                             -12: 0.000312, -13: 0.00015}
+    exposures = np.float32([exposure_value_in_sec[e] for e in exposures])
     response = calculate_response(read_images, exposures)
 
+    rgb = ['r', 'g', 'b']
     for i in range(len(rgb)):
         plot_response_curves(response[:, :, i], rgb[i], log=False)
     plt.show()
