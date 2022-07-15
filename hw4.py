@@ -1,5 +1,4 @@
 import cv2
-from time import sleep
 import numpy as np
 
 if __name__ == '__main__':
@@ -8,9 +7,16 @@ if __name__ == '__main__':
     suitable_exposure_index = -1
     current_exposure_index = 0  # starting from the largest (so that the first is the brightest)
     cam = cv2.VideoCapture(0)
+
+
     cam.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
     cam.set(cv2.CAP_PROP_EXPOSURE, exposures[current_exposure_index])
     cv2.namedWindow("camera")
+    ret, first_frame = cam.read()
+    if not ret:
+        print("failed to grab frame")
+    first_frame_gray = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
+    img_size = first_frame_gray.shape[0] * first_frame_gray.shape[1]
 
     # img_counter = 0
     while True:
@@ -34,7 +40,7 @@ if __name__ == '__main__':
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 cv2.imshow("camera", gray)
                 if current_exposure_index == 0:
-                    if np.count_nonzero(gray >= 254) < len(gray) * 0.2:
+                    if np.count_nonzero(gray >= 250) < img_size * 0.2:
                         img_name = f'underexposed{exposures[0]}.png'
                         cv2.imwrite(img_name, frame)
                         print(
@@ -43,9 +49,10 @@ if __name__ == '__main__':
                         cv2.destroyAllWindows()
                         exit()
                     cam.set(cv2.CAP_PROP_EXPOSURE, exposures[current_exposure_index])
-                if np.amax(gray) >= 255:
 
+                if np.count_nonzero(gray >= 250) > img_size * 0.2:
                     if current_exposure_index == len(exposures) - 1:
+                        print(f'{np.count_nonzero(gray >= 250)} out of {img_size} are overexposed')
                         img_name = f'overexposed{exposures[current_exposure_index]}.png'
                         cv2.imwrite(img_name, frame)
                         print(f"THE SCENE IS TOO BRIGHT, saved frame to {img_name} with exposure value {exposures[current_exposure_index]}")
@@ -76,7 +83,6 @@ if __name__ == '__main__':
 
                 suitable_exposure_index -= 1
                 cam.set(cv2.CAP_PROP_EXPOSURE, exposures[current_exposure_index])
-                sleep(2)
                 img_name = f'gray{exposures[suitable_exposure_index]}.png'
                 cv2.imwrite(img_name, frame)
                 print(f"{img_name} written with {exposures[suitable_exposure_index]} exposure!")
