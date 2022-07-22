@@ -79,7 +79,7 @@ if __name__ == '__main__':
                     cv2.imshow("camera", gray)
                     break
                 cv2.imshow("camera", gray)
-            frames_num = 1000
+            frames_num = 300
             current_frame = 0
             while np.count_nonzero(gray == 255) < len(gray) * 0.2 and suitable_exposure_index > 0 and current_frame < frames_num:
                 ret, frame = camera.read()
