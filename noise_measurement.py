@@ -23,6 +23,8 @@ if __name__ == "__main__":
     while success:
         snr.append(signal_to_noise(image))
         if counter == 1200:
+            cv.imwrite(f'data/{counter}-background.png', image)
+            break
             for i, col in enumerate(['r', 'g', 'b']):
                 hist = cv.calcHist([image], [i], None, [256], [0, 256])
                 plt.plot(hist, color=col)
